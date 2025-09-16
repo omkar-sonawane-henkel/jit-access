@@ -21,8 +21,7 @@
 
 package com.google.solutions.jitaccess.core.notifications;
 
-import com.google.solutions.jitaccess.core.MailAddressFormatter;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -68,11 +67,9 @@ public class TestMailNotificationService {
   @Test
   public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpClient.class);
-    var addressFormatter = Mockito.mock(MailAddressFormatter.class);
     var service = new MailNotificationService(
         mailAdapter,
-        new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE),
-        addressFormatter);
+        new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserEmail("user@example.com");
     service.sendNotification(new TestNotification(
@@ -92,13 +89,9 @@ public class TestMailNotificationService {
   @Test
   public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpClient.class);
-    var addressFormatter = Mockito.mock(MailAddressFormatter.class);
-    Mockito.when(addressFormatter.format("user@example.com"))
-        .thenReturn("user@example.com");
     var service = new MailNotificationService(
         mailAdapter,
-        new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE),
-        addressFormatter);
+        new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserEmail("user@example.com");
     service.sendNotification(new TestNotification(

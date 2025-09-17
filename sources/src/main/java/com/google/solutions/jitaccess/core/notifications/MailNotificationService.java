@@ -24,8 +24,6 @@ package com.google.solutions.jitaccess.core.notifications;
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.core.MailAddressFormatter;
-import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,10 +43,8 @@ import java.util.stream.Collectors;
  * Concrete class that delivers notifications over SMTP.
  */
 public class MailNotificationService extends NotificationService {
-  private final @NotNull Options options;
-  private final @NotNull SmtpClient smtpClient;
-  private final @NotNull MailAddressFormatter formatter;
-
+  private final Options options;
+  private final SmtpClient smtpClient;
   /**
    * Load a resource from a JAR resource.
    * 
@@ -83,16 +79,13 @@ public class MailNotificationService extends NotificationService {
   }
 
   public MailNotificationService(
-      @NotNull SmtpClient smtpClient,
-      @NotNull Options options,
-      @NotNull MailAddressFormatter formatter) {
+      SmtpClient smtpClient,
+      Options options) {
     Preconditions.checkNotNull(smtpClient);
     Preconditions.checkNotNull(options);
-    Preconditions.checkNotNull(formatter);
 
     this.smtpClient = smtpClient;
     this.options = options;
-    this.formatter = formatter;
   }
 
   // -------------------------------------------------------------------------
@@ -125,12 +118,8 @@ public class MailNotificationService extends NotificationService {
 
     try {
       this.smtpClient.sendMail(
-          notification.getToRecipients().stream()
-              .map((recipient) -> new UserEmail(formatter.format(recipient.email)))
-              .collect(Collectors.toList()),
-          notification.getCcRecipients().stream()
-              .map((recipient) -> new UserEmail(formatter.format(recipient.email)))
-              .collect(Collectors.toList()),
+          notification.getToRecipients(),
+          notification.getCcRecipients(),
           notification.getSubject(),
           formattedMessage,
           notification.isReply()

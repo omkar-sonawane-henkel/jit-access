@@ -64,9 +64,7 @@ and notifies you via email.
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
 
 * `has({}.jitAccessConstraint)` (no approval required)
-* `has({}.multiPartyApprovalConstraint)` ([Peer approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required) 
-* `has({}.externalApprovalConstraint)` ([External approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required)
-* `has({}.reviewerPrivilege)` (Enables reviewing [external approval requests](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval))
+* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required) 
 
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.

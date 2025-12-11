@@ -126,13 +126,15 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
     if (DEBUG) {
       System.out.printf(
-          "DEBUG AssetInventoryRepository: user=%s principals=%s bindingCount=%d\n",
+          "DEBUG AssetInventoryRepository: project=%s user=%s principals=%s bindingCount=%d\n",
+          projectId,
           user.email,
           principalSetForUser.identifiers(),
           allBindings.size());
 
       allBindings.forEach(binding -> System.out.printf(
-          "DEBUG AssetInventoryRepository: role=%s condition=%s members=%s\n",
+          "DEBUG AssetInventoryRepository: project=%s role=%s condition=%s members=%s\n",
+          projectId,
           binding.getRole(),
           binding.getCondition() != null ? binding.getCondition().getExpression() : "<none>",
           binding.getMembers()));
@@ -279,9 +281,10 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         Collection<Group> groups) {
       this.principalIdentifiers = groups
           .stream()
-          .map(g -> String.format("group:%s", g.getEmail()))
+          .map(g -> String.format("group:%s", g.getEmail()).toLowerCase(Locale.ROOT))
           .collect(Collectors.toSet());
-      this.principalIdentifiers.add(String.format("user:%s", user.email));
+      this.principalIdentifiers.add(
+          String.format("user:%s", user.email).toLowerCase(Locale.ROOT));
     }
 
     public Set<String> identifiers() {
@@ -291,7 +294,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     public boolean isMember(Binding binding) {
       return binding.getMembers()
           .stream()
-          .anyMatch(member -> this.principalIdentifiers.contains(member));
+          .map(member -> member.toLowerCase(Locale.ROOT))
+          .anyMatch(this.principalIdentifiers::contains);
     }
   }
 

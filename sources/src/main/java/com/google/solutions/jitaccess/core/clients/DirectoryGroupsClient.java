@@ -87,7 +87,7 @@ public class DirectoryGroupsClient {
    */
   public Collection<Group> listDirectGroupMemberships(
       UserId user) throws AccessException, IOException {
-    ListGroups result = null;
+    Groups result = null;
     try {
       //
       // NB. Using userKey doesn't work for service account,
@@ -133,7 +133,7 @@ public class DirectoryGroupsClient {
    */
   public Collection<Member> listDirectGroupMembers(
       String groupEmail) throws AccessException, IOException {
-    ListMembers result = null;
+    Members result = null;
     try {
       result = new ListMembers(createClient())
           .setGroupKey(groupEmail)

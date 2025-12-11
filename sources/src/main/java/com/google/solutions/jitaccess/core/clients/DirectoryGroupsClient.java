@@ -49,6 +49,8 @@ import java.util.stream.Collectors;
 @Singleton
 public class DirectoryGroupsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/admin.directory.group.readonly";
+  private static final boolean DEBUG = Boolean.parseBoolean(
+      System.getenv().getOrDefault("JIT_DEBUG_GROUP_CATALOG", "false"));
 
   private final Options options;
   private final GoogleCredentials credentials;
@@ -85,12 +87,13 @@ public class DirectoryGroupsClient {
    */
   public Collection<Group> listDirectGroupMemberships(
       UserId user) throws AccessException, IOException {
+    ListGroups result = null;
     try {
       //
       // NB. Using userKey doesn't work for service account,
       // so we have to use a query.
       //
-      var result = new ListGroups(createClient())
+      result = new ListGroups(createClient())
           .setCustomer(this.options.customerId)
           .setQuery(String.format("memberKey=%s", user.email))
           .execute();
@@ -115,6 +118,13 @@ public class DirectoryGroupsClient {
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
+    } finally {
+      if (DEBUG && result != null) {
+        System.out.printf(
+            "DEBUG DirectoryGroupsClient listDirectGroupMemberships user=%s returned=%d%n",
+            user.email,
+            result.getGroups() != null ? result.getGroups().size() : 0);
+      }
     }
   }
 
@@ -123,8 +133,9 @@ public class DirectoryGroupsClient {
    */
   public Collection<Member> listDirectGroupMembers(
       String groupEmail) throws AccessException, IOException {
+    ListMembers result = null;
     try {
-      var result = new ListMembers(createClient())
+      result = new ListMembers(createClient())
           .setGroupKey(groupEmail)
           .execute();
 
@@ -148,6 +159,13 @@ public class DirectoryGroupsClient {
               String.format("The group '%s' does not exist", groupEmail), e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    } finally {
+      if (DEBUG && result != null) {
+        System.out.printf(
+            "DEBUG DirectoryGroupsClient listDirectGroupMembers group=%s returned=%d%n",
+            groupEmail,
+            result.getMembers() != null ? result.getMembers().size() : 0);
       }
     }
   }

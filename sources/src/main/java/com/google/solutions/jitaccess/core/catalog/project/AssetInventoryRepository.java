@@ -53,6 +53,9 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   public static final String GROUP_PREFIX = "group:";
   public static final String USER_PREFIX = "user:";
 
+  private static final boolean DEBUG = Boolean.parseBoolean(
+      System.getenv().getOrDefault("JIT_DEBUG_GROUP_CATALOG", "false"));
+
   private final Options options;
   private final Executor executor;
   private final DirectoryGroupsClient groupsClient;
@@ -120,6 +123,20 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         // Only bindings that apply to the user.
         .filter(binding -> principalSetForUser.isMember(binding))
         .collect(Collectors.toList());
+
+    if (DEBUG) {
+      System.out.printf(
+          "DEBUG AssetInventoryRepository: user=%s principals=%s bindingCount=%d\n",
+          user.email,
+          principalSetForUser.identifiers(),
+          allBindings.size());
+
+      allBindings.forEach(binding -> System.out.printf(
+          "DEBUG AssetInventoryRepository: role=%s condition=%s members=%s\n",
+          binding.getRole(),
+          binding.getCondition() != null ? binding.getCondition().getExpression() : "<none>",
+          binding.getMembers()));
+    }
     return allBindings;
   }
 
@@ -265,6 +282,10 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
           .map(g -> String.format("group:%s", g.getEmail()))
           .collect(Collectors.toSet());
       this.principalIdentifiers.add(String.format("user:%s", user.email));
+    }
+
+    public Set<String> identifiers() {
+      return Collections.unmodifiableSet(this.principalIdentifiers);
     }
 
     public boolean isMember(Binding binding) {

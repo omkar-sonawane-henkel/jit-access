@@ -112,3 +112,14 @@ _Just-In-Time Access is an open-source project and not an officially supported G
 
 _All files in this repository are under the
 [Apache License, Version 2.0](LICENSE.txt) unless noted otherwise._
+
+
+## Debugs
+
+Added flag based DEBUG mechanism to enable debugs for Asset Inventory catalog and Directory API  
+Debug flag `JIT_DEBUG_GROUP_CATALOG: "true/false"`   
+ true - Enable Debugs  
+ false - Disable Debugs  
+ Default value is set to false
+
+ Add the debug flag as env variable to cloud run service. In our(Henkel) environment we pass value to this variable via terraform variable. 

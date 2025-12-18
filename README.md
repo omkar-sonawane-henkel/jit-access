@@ -123,3 +123,8 @@ Debug flag `JIT_DEBUG_GROUP_CATALOG: "true/false"`
  Default value is set to false
 
  Add the debug flag as env variable to cloud run service. In our(Henkel) environment we pass value to this variable via terraform variable. 
+
+ ### Reference document 
+Includes revision history and a new development branch.
+
+https://henkelgroup.sharepoint.com/:w:/r/teams/MST-C-HybridCloud/Shared%20Documents/General/200%20Public%20Cloud%20-%20GCP/Documentation/General%20Documentation/Platform-Guides/JIT%20Branching%20and%20History.docx?d=w3ffcf54606f147b48efaeb8b6600921c&csf=1&web=1&e=0BU6NW

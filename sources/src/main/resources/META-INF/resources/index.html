@@ -90,7 +90,7 @@
                                 Select the roles that you want to activate for this project:
                                 <br>
                                 <span class="note-text">
-                                    ( Note: A maximum of 9 roles can be activated at a time, and all must have the same activation type.)
+( Note: A maximum of 9 roles can be activated at a time, and all must have the same activation type i.e. self approval or external approval.)
                                 </span>
                             </div>
                             <div class="step-subsection">
@@ -862,7 +862,7 @@
                         // same activation type.
                         //
                         if (!selectedRoles.every(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
-                            throw "You can't combine self-approved and approval-based roles in a single request";
+throw "You can't combine self-approval and external approval based roles in a single request";
                         }
 
                         const activationType = selectedRoles[0].activationType;

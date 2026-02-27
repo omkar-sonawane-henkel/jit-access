@@ -195,6 +195,10 @@ legend {
     padding-top: 15px;
 }
 
+.note-text {
+    color: #9e9e9e;
+}
+
 .app-pane {
     display: none;
 }

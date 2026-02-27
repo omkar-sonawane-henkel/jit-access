@@ -88,6 +88,10 @@
                         <div class="mdl-step__content">
                             <div class="step-subsection">
                                 Select the roles that you want to activate for this project:
+                                <br>
+                                <span class="note-text">
+( Note: A maximum of 9 roles can be activated at a time, and all must have the same activation type i.e. self approval or external approval.)
+                                </span>
                             </div>
                             <div class="step-subsection">
                                 <table class="mdl-data-table mdl-shadow--2dp" id="step-selectrole-roles">
@@ -519,6 +523,7 @@
 
             /** Add handler that is triggered when a user clicks the "Continue" button of a step */
             addHandler(nextHandler) {
+                debugger;
                 console.assert(nextHandler);
 
                 const stepperElement = document.querySelector("ul.mdl-stepper");
@@ -851,11 +856,24 @@
                         //
                         multiPartyApproval = true;
 
-                        if (selectedRoles.length > 1) {
-                            throw "You can only request approval for a single role at a time";
+                        //
+                        // When requesting approval, all selected roles must use an approval-based
+                        // activation type (no mixing with self-approved roles) and must share the
+                        // same activation type.
+                        //
+                        if (!selectedRoles.every(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
+throw "You can't combine self-approval and external approval based roles in a single request";
                         }
 
-                        const reviewersResult = await backend.listReviewers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role, selectedRoles[0].activationType);
+                        const activationType = selectedRoles[0].activationType;
+                        if (!selectedRoles.every(i => i.activationType === activationType)) {
+                            throw "All selected roles must use the same approval type";
+                        }
+
+                        const reviewersResult = await backend.listReviewers(
+                            requestPane.selectedProjectId,
+                            selectedRoles[0].roleBinding.role,
+                            activationType);
 
                         if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
                             throw "There are currently no reviewers that could approve your request";
@@ -889,15 +907,39 @@
                     try {
                         let activationStatus;
                         if (multiPartyApproval) {
-                            console.assert(requestPane.selectedRoles.length == 1);
-                            activationStatus = await backend.requestActivation(
-                                requestPane.selectedProjectId,
-                                requestPane.selectedRoles[0].roleBinding.role,
-                                requestPane.selectedReviewers,
-                                requestPane.justificationText,
-                                parseInt(requestPane.activationTimeout),
-                                requestPane.selectedRoles[0].activationType
-                            );
+                            const selectedRoles = requestPane.selectedRoles;
+                            const projectId = requestPane.selectedProjectId;
+                            const reviewers = requestPane.selectedReviewers;
+                            const justification = requestPane.justificationText;
+                            const activationTimeout = parseInt(requestPane.activationTimeout);
+                            const activationType = selectedRoles[0].activationType;
+
+                            const responses = [];
+                            for (const roleEntry of selectedRoles) {
+                                const status = await backend.requestActivation(
+                                    projectId,
+                                    roleEntry.roleBinding.role,
+                                    reviewers,
+                                    justification,
+                                    activationTimeout,
+                                    activationType
+                                );
+                                responses.push(status);
+                            }
+
+                            if (responses.length === 1) {
+                                activationStatus = responses[0];
+                            }
+                            else if (responses.length > 1) {
+                                activationStatus = responses[0];
+                                const combinedItems = [];
+                                responses.forEach(r => {
+                                    if (r.items && r.items.length > 0) {
+                                        r.items.forEach(item => combinedItems.push(item));
+                                    }
+                                });
+                                activationStatus.items = combinedItems;
+                            }
                         }
                         else {
                             activationStatus = await backend.selfApproveActivation(

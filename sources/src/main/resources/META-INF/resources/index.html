@@ -90,7 +90,7 @@
                                 Select the roles that you want to activate for this project:
                                 <br>
                                 <span class="note-text">
-( Note: A maximum of 9 roles can be activated at a time, and all must have the same activation type i.e. self approval or external approval.)
+                                    ( Note: A maximum of 9 roles can be activated at a time, and all must have the same activation type.)
                                 </span>
                             </div>
                             <div class="step-subsection">
@@ -637,10 +637,88 @@
             }
 
             set roles(roles) {
-                this._roles = roles;
+                // Dedupe by role while keeping the highest priority approval topic.
+                // Duplicate entries can happen when the same role binding is eligible
+                // for multiple activation types (topics).
+                const extractTopic = (activationType) => {
+                    if (!activationType) {
+                        return "";
+                    }
+
+                    const match = activationType.match(/^(PEER_APPROVAL|EXTERNAL_APPROVAL)\((.*)\)$/);
+                    if (!match) {
+                        return "";
+                    }
+
+                    return (match[2] ?? "").trim().toLowerCase();
+                }
+
+                const topicPriority = (activationType) => {
+                    if (!activationType) {
+                        return 0;
+                    }
+
+                    // Self-approval has no topic; treat it as lowest priority.
+                    if (activationType.startsWith("SELF_APPROVAL")) {
+                        return 0;
+                    }
+
+                    const topic = extractTopic(activationType);
+                    switch (topic) {
+                        case "manager":
+                            return 3;
+                        case "developer":
+                            return 2;
+                        case "team":
+                            return 1;
+                        default:
+                            return 0;
+                    }
+                }
+
+                const statusPriority = (status) => {
+                    switch (status) {
+                        case "ACTIVE":
+                            return 2;
+                        case "AVAILABLE":
+                            return 1;
+                        default:
+                            return 0;
+                    }
+                }
+
+                const dedupedRolesByRole = new Map();
+                for (const item of roles ?? []) {
+                    const roleKey = item?.roleBinding?.role;
+                    if (!roleKey) {
+                        continue;
+                    }
+
+                    const existing = dedupedRolesByRole.get(roleKey);
+                    if (!existing) {
+                        dedupedRolesByRole.set(roleKey, item);
+                        continue;
+                    }
+
+                    const itemPriority = topicPriority(item.activationType);
+                    const existingPriority = topicPriority(existing.activationType);
+                    if (itemPriority > existingPriority) {
+                        dedupedRolesByRole.set(roleKey, item);
+                    }
+                    else if (itemPriority === existingPriority) {
+                        const itemStatusPriority = statusPriority(item.status);
+                        const existingStatusPriority = statusPriority(existing.status);
+                        if (itemStatusPriority > existingStatusPriority) {
+                            dedupedRolesByRole.set(roleKey, item);
+                        }
+                    }
+                }
+
+                const dedupedRoles = Array.from(dedupedRolesByRole.values());
+                this._roles = dedupedRoles;
 
                 this._roleTable.clear();
-                roles.forEach((item) => {
+                dedupedRoles.forEach((item) => {
                     this._roleTable.addRow(
                         item.roleBinding.role,
                         [
@@ -862,7 +940,7 @@
                         // same activation type.
                         //
                         if (!selectedRoles.every(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
-throw "You can't combine self-approval and external approval based roles in a single request";
+                            throw "You can't combine self-approved and approval-based roles in a single request";
                         }
 
                         const activationType = selectedRoles[0].activationType;

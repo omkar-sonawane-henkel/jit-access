@@ -658,22 +658,32 @@
                         return 0;
                     }
 
-                    // Self-approval has no topic; treat it as lowest priority.
+                    // Self-approval is the highest priority because it avoids
+                    // multi-party approval entirely.
                     if (activationType.startsWith("SELF_APPROVAL")) {
-                        return 0;
+                        return 4;
                     }
 
                     const topic = extractTopic(activationType);
-                    switch (topic) {
-                        case "manager":
-                            return 3;
-                        case "developer":
-                            return 2;
-                        case "team":
-                            return 1;
-                        default:
-                            return 0;
+                    // Empty topic (EXTERNAL_APPROVAL() / PEER_APPROVAL()) is the
+                    // most general approval type, and should win.
+                    if (topic === "") {
+                        return 3;
                     }
+
+                    // Match loosely because the topic might contain a prefix/suffix
+                    // (e.g. an org path) rather than being exactly "manager/developer/team".
+                    if (topic.includes("manager")) {
+                        return 3;
+                    }
+                    if (topic.includes("developer")) {
+                        return 2;
+                    }
+                    if (topic.includes("team")) {
+                        return 1;
+                    }
+
+                    return 0;
                 }
 
                 const statusPriority = (status) => {
@@ -935,29 +945,41 @@
                         multiPartyApproval = true;
 
                         //
-                        // When requesting approval, all selected roles must use an approval-based
-                        // activation type (no mixing with self-approved roles) and must share the
-                        // same activation type.
+                        // When requesting approval, roles must be approval-based (no mixing with
+                        // self-approved roles).
                         //
                         if (!selectedRoles.every(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
                             throw "You can't combine self-approved and approval-based roles in a single request";
                         }
 
-                        const activationType = selectedRoles[0].activationType;
-                        if (!selectedRoles.every(i => i.activationType === activationType)) {
-                            throw "All selected roles must use the same approval type";
+                        // List reviewers for each selected role/activationType and keep the
+                        // intersection so the chosen reviewers can approve every selected role.
+                        let commonReviewerEmails = null;
+                        for (const roleEntry of selectedRoles) {
+                            const reviewersResult = await backend.listReviewers(
+                                requestPane.selectedProjectId,
+                                roleEntry.roleBinding.role,
+                                roleEntry.activationType);
+
+                            if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
+                                throw "There are currently no reviewers that could approve your request";
+                            }
+
+                            const roleReviewerEmails = new Set(reviewersResult.reviewers.map(r => r.email));
+                            if (commonReviewerEmails === null) {
+                                commonReviewerEmails = roleReviewerEmails;
+                            }
+                            else {
+                                commonReviewerEmails = new Set(
+                                    Array.from(commonReviewerEmails).filter(email => roleReviewerEmails.has(email)));
+                            }
                         }
 
-                        const reviewersResult = await backend.listReviewers(
-                            requestPane.selectedProjectId,
-                            selectedRoles[0].roleBinding.role,
-                            activationType);
-
-                        if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
-                            throw "There are currently no reviewers that could approve your request";
+                        if (!commonReviewerEmails || commonReviewerEmails.size === 0) {
+                            throw "There are currently no common reviewers that could approve your request";
                         }
 
-                        requestPane.reviewers = reviewersResult.reviewers;
+                        requestPane.reviewers = Array.from(commonReviewerEmails).map(email => ({ email: email }));
                     }
                     else {
                         //
@@ -990,7 +1012,6 @@
                             const reviewers = requestPane.selectedReviewers;
                             const justification = requestPane.justificationText;
                             const activationTimeout = parseInt(requestPane.activationTimeout);
-                            const activationType = selectedRoles[0].activationType;
 
                             const responses = [];
                             for (const roleEntry of selectedRoles) {
@@ -1000,7 +1021,7 @@
                                     reviewers,
                                     justification,
                                     activationTimeout,
-                                    activationType
+                                    roleEntry.activationType
                                 );
                                 responses.push(status);
                             }

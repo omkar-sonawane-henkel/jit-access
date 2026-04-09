@@ -121,6 +121,15 @@ public class TestPrivilegeFactory {
   }
 
   @Test
+  public void whenPeerApprovalConditionHasHierarchicalTopic_ThenCreateRequesterPrivilegeReturnsEmpty() {
+    var condition = new Expr()
+        .setExpression("has({}.multiPartyApprovalConstraint.projecttopic.managertopic)");
+    var privilege = PrivilegeFactory.createRequesterPrivilege(
+        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
+    assertTrue(privilege.isEmpty());
+  }
+
+  @Test
   public void whenExternalApprovalConditionHasRedundantWhitespace_ThenCreateRequesterPrivilegeReturnsExternalApprovalPrivilege() {
     var condition = new Expr()
         .setExpression(" \r\n\t has( { \t\n\r\n }.externalApprovalConstraint.topic \t ) \t \r\n\r");
@@ -143,6 +152,17 @@ public class TestPrivilegeFactory {
   }
 
   @Test
+  public void whenExternalApprovalConditionHasHierarchicalTopic_ThenCreateRequesterPrivilegeReturnsExternalApprovalPrivilege() {
+    var condition = new Expr()
+        .setExpression("has({}.externalApprovalConstraint.projecttopic.managertopic)");
+    var privilege = PrivilegeFactory.createRequesterPrivilege(
+        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
+    assertTrue(privilege.isPresent());
+    assertEquals(new ExternalApproval("projecttopic.managertopic").name(), privilege.get().activationType().name());
+    assertEquals("role", privilege.get().name());
+  }
+
+  @Test
   public void whenExternalApprovalNoTopic_ThenCreateRequesterPrivilegeReturnsPeerApprovalPrivilege() {
     var condition = new Expr()
         .setExpression("has({}.externalApprovalConstraint)");
@@ -157,6 +177,15 @@ public class TestPrivilegeFactory {
   public void whenExternalApprovalInvalidTopic_ThenCreateRequesterPrivilegeReturnsEmpty() {
     var condition = new Expr()
         .setExpression("has({}.externalApprovalConstraint.123)");
+    var privilege = PrivilegeFactory.createRequesterPrivilege(
+        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
+    assertTrue(privilege.isEmpty());
+  }
+
+  @Test
+  public void whenExternalApprovalConditionHasInvalidHierarchicalTopic_ThenCreateRequesterPrivilegeReturnsEmpty() {
+    var condition = new Expr()
+        .setExpression("has({}.externalApprovalConstraint.projecttopic.123)");
     var privilege = PrivilegeFactory.createRequesterPrivilege(
         new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
     assertTrue(privilege.isEmpty());
@@ -246,6 +275,15 @@ public class TestPrivilegeFactory {
   }
 
   @Test
+  public void whenPeerApprovalConditionHasHierarchicalTopic_ThenCreateReviewerPrivilegeReturnsEmpty() {
+    var condition = new Expr()
+        .setExpression("has({}.multiPartyApprovalConstraint.projecttopic.managertopic)");
+    var privilege = PrivilegeFactory.createReviewerPrivilege(
+        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
+    assertTrue(privilege.isEmpty());
+  }
+
+  @Test
   public void whenExternalApprovalCondition_ThenCreateReviewerPrivilegeReturnsEmpty() {
     var condition = new Expr()
         .setExpression("has( {}.externalApprovalConstraint )");
@@ -281,6 +319,19 @@ public class TestPrivilegeFactory {
   }
 
   @Test
+  public void whenReviewerConditionHasHierarchicalTopic_ThenCreateReviewerPrivilegeReturnsExternalReviewerPrivilege() {
+    var condition = new Expr()
+        .setExpression("has({}.reviewerPrivilege.projecttopic.managertopic)");
+    var privilege = PrivilegeFactory.createReviewerPrivilege(
+        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
+    assertTrue(privilege.isPresent());
+    assertTrue(privilege.get().reviewableTypes().stream().map(type -> type.name()).collect(Collectors.toList())
+        .contains(new ExternalApproval("projecttopic.managertopic").name()));
+    assertEquals(1, privilege.get().reviewableTypes().size());
+    assertEquals("role", privilege.get().name());
+  }
+
+  @Test
   public void whenExternalApprovalNoTopic_ThenCreateReviewerPrivilegeReturnsExternalReviewerPrivilege() {
     var condition = new Expr()
         .setExpression("has({}.reviewerPrivilege)");
@@ -296,6 +347,15 @@ public class TestPrivilegeFactory {
   public void whenExternalApprovalInvalidTopic_ThenCreateReviewerPrivilegeReturnsEmpty() {
     var condition = new Expr()
         .setExpression("has({}.reviewerPrivilege.123)");
+    var privilege = PrivilegeFactory.createReviewerPrivilege(
+        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
+    assertTrue(privilege.isEmpty());
+  }
+
+  @Test
+  public void whenReviewerConditionHasInvalidHierarchicalTopic_ThenCreateReviewerPrivilegeReturnsEmpty() {
+    var condition = new Expr()
+        .setExpression("has({}.reviewerPrivilege.projecttopic.123)");
     var privilege = PrivilegeFactory.createReviewerPrivilege(
         new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")), condition);
     assertTrue(privilege.isEmpty());

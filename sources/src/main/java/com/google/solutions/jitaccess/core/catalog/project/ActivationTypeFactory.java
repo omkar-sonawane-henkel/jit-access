@@ -17,23 +17,33 @@ public class ActivationTypeFactory {
       return new SelfApproval();
     } else if (name.startsWith("PEER_APPROVAL")) {
       var topic = name.substring("PEER_APPROVAL(".length(), name.length() - ")".length());
-      validateTopic(topic);
+      validateTopicPeer(topic);
       return new PeerApproval(topic);
     } else if (name.startsWith("EXTERNAL_APPROVAL")) {
       var topic = name.substring("EXTERNAL_APPROVAL(".length(), name.length() - ")".length());
-      validateTopic(topic);
+      validateTopicExternal(topic);
       return new ExternalApproval(topic);
     } else {
       throw new IllegalArgumentException("Invalid activation type name.");
     }
   }
 
-  private static void validateTopic(String topic) {
+  private static void validateTopicPeer(String topic) {
     if (topic.trim().equals("")) {
       return;
     }
 
-    if (!Pattern.compile(PrivilegeFactory.VALID_TOPIC_PATTERN).matcher("." + topic).matches()) {
+    if (!Pattern.compile(PrivilegeFactory.VALID_SINGLE_TOPIC_PATTERN).matcher("." + topic).matches()) {
+      throw new IllegalArgumentException("Invalid topic name.");
+    }
+  }
+
+  private static void validateTopicExternal(String topic) {
+    if (topic.trim().equals("")) {
+      return;
+    }
+
+    if (!Pattern.compile(PrivilegeFactory.VALID_HIERARCHICAL_TOPIC_PATTERN).matcher("." + topic).matches()) {
       throw new IllegalArgumentException("Invalid topic name.");
     }
   }

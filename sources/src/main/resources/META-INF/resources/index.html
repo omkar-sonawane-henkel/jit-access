@@ -353,12 +353,12 @@
                                 <i>External approval</i>: To allow a user or group to activate a role if at least one
                                 external
                                 reviewer approves their request, add the following IAM condition to the IAM binding:
-                                <pre><code class="language-cel">has({}.externalApprovalConstraint)</code></pre>
+                                <pre><code class="language-cel">has({}.externalApprovalConstraint.PROJECT_TOPIC.MANAGER_TOPIC)</code></pre>
 
                                 External approvers are users that have been granted the same IAM binding with the
                                 following
                                 IAM condition:
-                                <pre><code class="language-cel">has({}.reviewerPrivilege)</code></pre>
+                                <pre><code class="language-cel">has({}.reviewerPrivilege.PROJECT_TOPIC.MANAGER_TOPIC)</code></pre>
                             </li>
                         </ul>
                         </p>

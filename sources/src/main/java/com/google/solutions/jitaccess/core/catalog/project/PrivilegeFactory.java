@@ -40,10 +40,11 @@ class PrivilegeFactory {
   /** Condition title for activated role bindings */
   public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
 
-  private static final String VALID_TOPIC_SEGMENT =
+  public static final String VALID_TOPIC_SEGMENT =
       "\\.[a-zA-Z]([a-zA-Z0-9-_]*[a-zA-Z0-9])?";
-  static final String VALID_SINGLE_TOPIC_PATTERN = "(" + VALID_TOPIC_SEGMENT + "?)";
-  static final String VALID_HIERARCHICAL_TOPIC_PATTERN = "(" + VALID_TOPIC_SEGMENT + "*)";
+  
+  public    static final String VALID_SINGLE_TOPIC_PATTERN = "(" + VALID_TOPIC_SEGMENT + "?)";
+  public static final String VALID_HIERARCHICAL_TOPIC_PATTERN = "(" + VALID_TOPIC_SEGMENT + "*)";
 
   /**
    * Condition that marks a role binding as eligible for self approver privilege

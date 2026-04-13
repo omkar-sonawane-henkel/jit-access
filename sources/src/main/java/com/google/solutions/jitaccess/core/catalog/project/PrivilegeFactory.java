@@ -41,10 +41,10 @@ class PrivilegeFactory {
   public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
 
   public static final String VALID_TOPIC_SEGMENT =
-      "\\.[a-zA-Z]([a-zA-Z0-9-_]*[a-zA-Z0-9])?";
+    "\\.[a-zA-Z][a-zA-Z0-9-_]*";
   
-  public    static final String VALID_SINGLE_TOPIC_PATTERN = "(" + VALID_TOPIC_SEGMENT + "?)";
-  public static final String VALID_HIERARCHICAL_TOPIC_PATTERN = "(" + VALID_TOPIC_SEGMENT + "*)";
+  public static final String VALID_SINGLE_TOPIC_PATTERN =  "(" + VALID_TOPIC_SEGMENT + ")?";
+  public static final String VALID_HIERARCHICAL_TOPIC_PATTERN =  "(" + VALID_TOPIC_SEGMENT + ")*";
 
   /**
    * Condition that marks a role binding as eligible for self approver privilege
@@ -53,16 +53,21 @@ class PrivilegeFactory {
       .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
   /** Condition that marks a role binding as eligible for peer privilege */
-  private static final Pattern PEER_CONDITION_PATTERN = Pattern
-      .compile("\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint" + VALID_SINGLE_TOPIC_PATTERN + "\\s*\\)\\s*$");
+  private static final Pattern PEER_CONDITION_PATTERN = Pattern.compile(
+    "\\s*has\\(\\s*\\{\\s*\\}\\.multipartyapprovalconstraint" + VALID_SINGLE_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
   /** Condition that marks a role binding as eligible for requester privilege */
-  private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern
-      .compile("\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint" + VALID_HIERARCHICAL_TOPIC_PATTERN + "\\s*\\)\\s*$");
+  private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern.compile(
+    "\\s*has\\(\\s*\\{\\s*\\}\\.externalapprovalconstraint"
+        + VALID_HIERARCHICAL_TOPIC_PATTERN
+        + "\\s*\\)\\s*$"
+  );
 
   /** Condition that marks a role binding as eligible for reviewer privilege */
-  private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern
-      .compile("\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege" + VALID_HIERARCHICAL_TOPIC_PATTERN + "\\s*\\)\\s*$");
+  private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern.compile(
+    "\\s*has\\(\\s*\\{\\s*\\}\\.reviewerprivilege"
+        + VALID_HIERARCHICAL_TOPIC_PATTERN
+        + "\\s*\\)\\s*$");
 
   private static boolean isMatchingCondition(Expr iamCondition, Pattern pattern) {
     if (iamCondition == null) {

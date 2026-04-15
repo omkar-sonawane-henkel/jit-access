@@ -102,7 +102,7 @@ class Model {
 
         try {
             return await $.ajax({
-                url: `/api/projects/${projectId}/reviewers?role=${encodeURIComponent(role)}&activationType=${encodeURIComponent(activationType)}`,
+                url: `/api/projects/${encodeURIComponent(projectId)}/reviewers?role=${encodeURIComponent(role)}&activationType=${encodeURIComponent(activationType)}`,
                 dataType: "json",
                 headers: this._getHeaders()
             });
